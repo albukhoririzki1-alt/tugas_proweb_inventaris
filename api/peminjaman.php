@@ -37,7 +37,7 @@ if ($method === 'GET') {
         JOIN barang b ON b.id = p.barang_id
         JOIN kategori k ON k.id = b.kategori_id
         LEFT JOIN users u ON u.id = p.user_id
-        WHERE p.status = ?
+        WHERE p.status = ? AND b.deleted_at IS NULL
         ORDER BY p.created_at DESC
     ");
     $stmt->execute([$status]);
@@ -57,7 +57,7 @@ if ($method === 'POST') {
         }
 
         // Cek barang tersedia
-        $cek = $pdo->prepare('SELECT status, nama FROM barang WHERE id=?');
+        $cek = $pdo->prepare('SELECT status, nama FROM barang WHERE id=? AND deleted_at IS NULL');
         $cek->execute([$d['barang_id']]);
         $brg = $cek->fetch();
         if (!$brg || $brg['status'] !== 'Tersedia') {

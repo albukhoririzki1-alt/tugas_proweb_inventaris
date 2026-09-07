@@ -12,18 +12,18 @@ header('Content-Type: application/json');
 
 $pdo = getDB();
 
-$total   = (int) $pdo->query('SELECT COUNT(*) FROM barang')->fetchColumn();
-$baik    = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE kondisi='Baik'")->fetchColumn();
-$cukup   = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE kondisi='Cukup Baik'")->fetchColumn();
-$rusak   = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE kondisi='Rusak'")->fetchColumn();
-$pinjam  = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE status='Dipinjam'")->fetchColumn();
+$total   = (int) $pdo->query('SELECT COUNT(*) FROM barang WHERE deleted_at IS NULL')->fetchColumn();
+$baik    = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE deleted_at IS NULL AND kondisi='Baik'")->fetchColumn();
+$cukup   = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE deleted_at IS NULL AND kondisi='Cukup Baik'")->fetchColumn();
+$rusak   = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE deleted_at IS NULL AND kondisi='Rusak'")->fetchColumn();
+$pinjam  = (int) $pdo->query("SELECT COUNT(*) FROM barang WHERE deleted_at IS NULL AND status='Dipinjam'")->fetchColumn();
 $terlambat = (int) $pdo->query("SELECT COUNT(*) FROM peminjaman WHERE status='Aktif' AND tgl_kembali < CURDATE()")->fetchColumn();
 
 // Per kategori
 $katRows = $pdo->query("
     SELECT k.nama, k.ikon, COUNT(b.id) as jumlah
     FROM kategori k
-    LEFT JOIN barang b ON b.kategori_id = k.id
+    LEFT JOIN barang b ON b.kategori_id = k.id AND b.deleted_at IS NULL
     GROUP BY k.id, k.nama, k.ikon
     ORDER BY jumlah DESC
 ")->fetchAll();
@@ -33,6 +33,7 @@ $terbaru = $pdo->query("
     SELECT b.*, k.nama as kategori, k.ikon
     FROM barang b
     JOIN kategori k ON k.id = b.kategori_id
+    WHERE b.deleted_at IS NULL
     ORDER BY b.created_at DESC LIMIT 5
 ")->fetchAll();
 

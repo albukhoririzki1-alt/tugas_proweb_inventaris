@@ -30,6 +30,7 @@ $peran = $_SESSION['peran'];
 
             <?php if ($peran === 'admin'): ?>
                   <?php require_once 'pages/kelola_users.php'; ?>
+                  <?php require_once 'pages/recycle.php'; ?>
             <?php endif; ?>
 
       </main>

@@ -59,6 +59,9 @@ $badge = $badgeColors[$peran];
             <button class="nav-item" onclick="showPage('kelola-users', this)">
                 <span class="icon">👥</span> Kelola User
             </button>
+            <button class="nav-item" onclick="showPage('recycle', this)">
+                <span class="icon">🗑️</span> Recycle Bin
+            </button>
         <?php endif; ?>
     </nav>
 

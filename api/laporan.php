@@ -36,7 +36,7 @@ $sql = "
            b.created_at
     FROM barang b
     JOIN kategori k ON k.id = b.kategori_id
-    WHERE " . implode(' AND ', $where) . "
+    WHERE b.deleted_at IS NULL AND " . implode(' AND ', $where) . "
     ORDER BY k.nama, b.nama
 ";
 $stmt = $pdo->prepare($sql);

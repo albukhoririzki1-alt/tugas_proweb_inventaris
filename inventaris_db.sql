@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS barang (
   lokasi       VARCHAR(150) DEFAULT NULL,
   catatan      TEXT         DEFAULT NULL,
   status       ENUM('Tersedia','Dipinjam','Perbaikan') NOT NULL DEFAULT 'Tersedia',
+  deleted_at   DATETIME       DEFAULT NULL,
   user_id      INT          DEFAULT NULL,
   created_at   DATETIME     DEFAULT CURRENT_TIMESTAMP,
   updated_at   DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

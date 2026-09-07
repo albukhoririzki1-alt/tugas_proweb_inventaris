@@ -80,6 +80,7 @@ function renderPage(p) {
     case 'riwayat': loadRiwayat(); break;
     case 'laporan': loadLaporan(); break;
     case 'kelola-users': loadUsers(); break;
+    case 'recycle': loadRecycle(); break;
   }
 }
 
@@ -291,6 +292,56 @@ async function hapusBarang(id, nama) {
     toast('Barang dihapus', 'info');
     loadBarang();
     renderDashboard();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadRecycle() {
+  if (APP_ROLE !== 'admin') return;
+  try {
+    const list = await api('api/barang.php?recycle=1');
+    const tbody = document.getElementById('tabel-recycle');
+    const empty = document.getElementById('empty-recycle');
+    document.getElementById('recycle-count').textContent = `${list.length} barang`;
+    if (!list.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = list.map(b => `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="item-thumb" style="background:rgba(248,113,113,0.08)">${b.ikon}</div>
+          <div>
+            <div style="font-weight:500;font-size:13px">${b.nama}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${b.lokasi || '-'}</div>
+          </div>
+        </div>
+      </td>
+      <td>${b.kategori}</td>
+      <td style="font-family:monospace;font-size:12px;color:var(--text-dim)">${b.kode || '-'}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${new Date(b.deleted_at).toLocaleString('id-ID')}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="restoreBarang(${b.id})">Pulihkan</button>
+        <button class="btn btn-danger btn-sm" onclick="hapusPermanen(${b.id},'${b.nama.replace(/'/g, "\\'")}')">Hapus Permanen</button>
+      </div></td>
+    </tr>`).join('');
+  } catch (e) { toast('Gagal memuat recycle bin: ' + e.message, 'error'); }
+}
+
+async function restoreBarang(id) {
+  if (!confirm('Pulihkan barang ini ke daftar inventaris?')) return;
+  try {
+    await api(`api/barang.php?action=restore`, 'PUT', { id });
+    toast('Barang berhasil dipulihkan', 'success');
+    loadRecycle();
+    loadBarang();
+    renderDashboard();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function hapusPermanen(id, nama) {
+  if (!confirm(`Hapus barang "${nama}" secara permanen? Data tidak dapat dipulihkan.`)) return;
+  try {
+    await api(`api/barang.php?id=${id}&permanent=1`, 'DELETE');
+    toast('Barang dihapus permanen', 'info');
+    loadRecycle();
   } catch (e) { toast(e.message, 'error'); }
 }
 

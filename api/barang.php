@@ -5,7 +5,10 @@
  * GET    → list semua barang (+ filter)
  * POST   → tambah barang  [admin]
  * PUT    → edit barang    [admin]
- * DELETE → hapus barang   [admin]
+ * DELETE → soft-delete barang   [admin]
+ * GET ?recycle=1 → daftar barang terhapus   [admin]
+ * PUT ?action=restore → pulihkan barang   [admin]
+ * DELETE ?permanent=1 → hapus permanen   [admin]
  */
 define('BASE_URL', '../');
 require_once __DIR__ . '/../config/db.php';
@@ -19,8 +22,15 @@ $user   = getCurrentUser();
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
 if ($method === 'GET') {
+    $recycle = !empty($_GET['recycle']);
+    if ($recycle) {
+        requireRole(['admin']);
+    }
+
     $where = ['1=1'];
     $params = [];
+
+    $where[] = $recycle ? 'b.deleted_at IS NOT NULL' : 'b.deleted_at IS NULL';
 
     if (!empty($_GET['q'])) {
         $where[] = '(b.nama LIKE ? OR b.kode LIKE ? OR b.jenis LIKE ? OR b.lokasi LIKE ? OR k.nama LIKE ?)';
@@ -93,6 +103,23 @@ if ($method === 'PUT') {
     $d  = json_decode(file_get_contents('php://input'), true);
     $id = (int) ($d['id'] ?? 0);
 
+    if (($_GET['action'] ?? '') === 'restore') {
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID tidak valid']);
+            exit;
+        }
+        $stmt = $pdo->prepare('UPDATE barang SET deleted_at=NULL WHERE id=? AND deleted_at IS NOT NULL');
+        $stmt->execute([$id]);
+        if (!$stmt->rowCount()) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Barang tidak ditemukan di recycle bin']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     if (!$id) {
         http_response_code(400);
         echo json_encode(['error' => 'ID tidak valid']);
@@ -102,7 +129,7 @@ if ($method === 'PUT') {
     $stmt = $pdo->prepare("
         UPDATE barang SET nama=?, kategori_id=?, jenis=?, kode=?, tahun=?,
         kondisi=?, sumber=?, lokasi=?, catatan=?, status=?
-        WHERE id=?
+        WHERE id=? AND deleted_at IS NULL
     ");
     $stmt->execute([
         $d['nama'],
@@ -135,11 +162,26 @@ if ($method === 'DELETE') {
         exit;
     }
 
-    $nama = $pdo->prepare('SELECT nama FROM barang WHERE id=?');
+    $nama = $pdo->prepare('SELECT nama, deleted_at FROM barang WHERE id=?');
     $nama->execute([$id]);
     $row = $nama->fetch();
 
-    $pdo->prepare('DELETE FROM barang WHERE id=?')->execute([$id]);
+    if (!$row || (empty($_GET['permanent']) && $row['deleted_at'] !== null)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Barang tidak ditemukan']);
+        exit;
+    }
+
+    if (!empty($_GET['permanent'])) {
+        $pdo->beginTransaction();
+        $pdo->prepare('DELETE FROM peminjaman WHERE barang_id=?')->execute([$id]);
+        $pdo->prepare('DELETE FROM barang WHERE id=? AND deleted_at IS NOT NULL')->execute([$id]);
+        $pdo->commit();
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    $pdo->prepare('UPDATE barang SET deleted_at=NOW() WHERE id=? AND deleted_at IS NULL')->execute([$id]);
 
     $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
         ->execute(["Barang \"{$row['nama']}\" dihapus", $user['id']]);

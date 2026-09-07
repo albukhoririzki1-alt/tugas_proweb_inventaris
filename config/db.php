@@ -21,6 +21,10 @@ function getDB(): PDO {
         ];
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            $column = $pdo->query("SHOW COLUMNS FROM barang LIKE 'deleted_at'")->fetch();
+            if (!$column) {
+                $pdo->exec('ALTER TABLE barang ADD deleted_at DATETIME DEFAULT NULL AFTER status');
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['error' => 'Koneksi database gagal: ' . $e->getMessage()]));

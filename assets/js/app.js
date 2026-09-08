@@ -81,6 +81,7 @@ function renderPage(p) {
     case 'laporan': loadLaporan(); break;
     case 'kelola-users': loadUsers(); break;
     case 'recycle': loadRecycle(); break;
+    case 'verifikasi-users': loadVerifikasiUsers(); break;
   }
 }
 
@@ -675,6 +676,92 @@ async function hapusUser(id, username) {
 }
 
 // ===================================
+// VERIFIKASI USER (Admin Only)
+// ===================================
+async function loadVerifikasiUsers() {
+  if (APP_ROLE !== 'admin') return;
+  try {
+    const list = await api('api/verifikasi.php');
+    const tbody = document.getElementById('tabel-verifikasi');
+    const empty = document.getElementById('empty-verifikasi');
+    const countEl = document.getElementById('verifikasi-count');
+    const statsEl = document.getElementById('verifikasi-stats');
+
+    const pending = list.filter(u => u.status === 'PENDING');
+    const rejected = list.filter(u => u.status === 'REJECTED');
+
+    if (countEl) countEl.textContent = `${list.length} pendaftaran`;
+
+    // Stats cards
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <div class="stat-card" style="--card-color:#fb923c"><div class="stat-icon">⏳</div><div class="stat-value">${pending.length}</div><div class="stat-label">Menunggu Verifikasi</div></div>
+        <div class="stat-card" style="--card-color:#f87171"><div class="stat-icon">🚫</div><div class="stat-value">${rejected.length}</div><div class="stat-label">Ditolak</div></div>
+        <div class="stat-card" style="--card-color:#4f8aff"><div class="stat-icon">📋</div><div class="stat-value">${list.length}</div><div class="stat-label">Total Pendaftaran</div></div>`;
+    }
+
+    if (!list.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+
+    const statusBadge = {
+      'PENDING': '<span class="badge badge-dipinjam">⏳ Pending</span>',
+      'REJECTED': '<span class="badge badge-rusak">🚫 Ditolak</span>'
+    };
+
+    tbody.innerHTML = list.map(u => `<tr>
+      <td style="font-weight:500">${u.nama}</td>
+      <td style="font-family:monospace;font-size:12px">${u.username}</td>
+      <td style="font-size:12px">${u.email || '-'}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${new Date(u.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+      <td>${statusBadge[u.status] || u.status}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          ${u.status === 'PENDING' ? `
+            <button class="btn btn-primary btn-sm" onclick="approveUser(${u.id}, '${u.nama.replace(/'/g, "\\'")}')">✓ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectUser(${u.id}, '${u.nama.replace(/'/g, "\\'")}')">✕ Reject</button>
+          ` : `
+            <button class="btn btn-primary btn-sm" onclick="approveUser(${u.id}, '${u.nama.replace(/'/g, "\\'")}')">✓ Approve</button>
+          `}
+        </div>
+      </td>
+    </tr>`).join('');
+  } catch (e) { toast('Gagal memuat data verifikasi: ' + e.message, 'error'); }
+}
+
+async function approveUser(id, nama) {
+  if (!confirm(`Setujui pendaftaran "${nama}"?`)) return;
+  try {
+    const res = await api('api/verifikasi.php', 'PUT', { id, action: 'approve' });
+    toast(res.message || 'User berhasil disetujui!', 'success');
+    loadVerifikasiUsers();
+    loadPendingCount();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function rejectUser(id, nama) {
+  if (!confirm(`Tolak pendaftaran "${nama}"?`)) return;
+  try {
+    const res = await api('api/verifikasi.php', 'PUT', { id, action: 'reject' });
+    toast(res.message || 'User telah ditolak', 'info');
+    loadVerifikasiUsers();
+    loadPendingCount();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadPendingCount() {
+  if (APP_ROLE !== 'admin') return;
+  try {
+    const list = await api('api/verifikasi.php');
+    const pending = list.filter(u => u.status === 'PENDING').length;
+    const badge = document.getElementById('badge-pending');
+    if (badge) {
+      badge.style.display = pending > 0 ? '' : 'none';
+      badge.textContent = pending;
+    }
+  } catch (e) { /* silent */ }
+}
+
+// ===================================
 // MODAL MANAGEMENT
 // ===================================
 async function openModal(id) {
@@ -765,6 +852,9 @@ async function init() {
 
   // Dashboard sebagai halaman pertama
   renderDashboard();
+
+  // Load jumlah pending untuk badge sidebar
+  loadPendingCount();
 }
 
 init();

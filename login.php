@@ -20,23 +20,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username && $password) {
         require_once __DIR__ . '/config/db.php';
         $pdo  = getDB();
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? AND aktif = 1 LIMIT 1');
+
+        // Ambil user berdasarkan username saja (cek status setelahnya)
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
         $stmt->execute([$username]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            session_regenerate_id(true);
-            $_SESSION['user_id']  = $user['id'];
-            $_SESSION['nama']     = $user['nama'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['peran']    = $user['peran'];
+            // Cek status akun
+            $status = $user['status'] ?? 'ACTIVE';
 
-            // Catat riwayat login
-            $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
-                ->execute(["Login: {$user['nama']} ({$user['peran']})", $user['id']]);
+            if ($status === 'PENDING') {
+                $error = 'Akun Anda masih menunggu verifikasi Admin.';
+            } elseif ($status === 'REJECTED') {
+                $error = 'Pendaftaran Anda telah ditolak oleh Admin.';
+            } elseif (!$user['aktif']) {
+                $error = 'Akun Anda telah dinonaktifkan. Hubungi Admin.';
+            } else {
+                // Status ACTIVE dan aktif = 1 → login berhasil
+                session_regenerate_id(true);
+                $_SESSION['user_id']  = $user['id'];
+                $_SESSION['nama']     = $user['nama'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['peran']    = $user['peran'];
 
-            header('Location: index.php');
-            exit;
+                // Catat riwayat login
+                $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
+                    ->execute(["Login: {$user['nama']} ({$user['peran']})", $user['id']]);
+
+                header('Location: index.php');
+                exit;
+            }
         } else {
             $error = 'Username atau password salah!';
         }
@@ -235,6 +249,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             animation: shake 0.4s ease;
         }
 
+        .warning-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(251, 146, 60, 0.1);
+            border: 1px solid rgba(251, 146, 60, 0.25);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #fb923c;
+            margin-bottom: 18px;
+            animation: shake 0.4s ease;
+        }
+
         @keyframes shake {
 
             0%,
@@ -276,6 +304,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateY(0);
             opacity: 0.9;
         }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .register-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .register-link a:hover {
+            color: var(--accent2);
+        }
     </style>
 </head>
 
@@ -294,7 +340,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Error message -->
             <?php if ($error): ?>
-                <div class="error-box">❌ <?= htmlspecialchars($error) ?></div>
+                <?php if (strpos($error, 'menunggu verifikasi') !== false): ?>
+                    <div class="warning-box">⏳ <?= htmlspecialchars($error) ?></div>
+                <?php elseif (strpos($error, 'ditolak') !== false): ?>
+                    <div class="error-box">🚫 <?= htmlspecialchars($error) ?></div>
+                <?php else: ?>
+                    <div class="error-box">❌ <?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <!-- Form -->
@@ -322,14 +374,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <button type="submit" class="btn-login">Masuk ke Sistem →</button>
             </form>
+
+            <!-- Link ke register -->
+            <div class="register-link">
+                Belum punya akun? <a href="register.php">Daftar</a>
+            </div>
         </div>
+    </div>
+
 </body>
 
 </html>
-
-
-<!-- kelompok proweb:
-        zaki
-        rizki
-        rafa
-        saskia 

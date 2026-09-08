@@ -9,6 +9,23 @@ define('DB_NAME', 'inventaris_db');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHAR', 'utf8mb4');
+define('TRASH_RETENTION_DAYS', 30);
+
+function purgeExpiredBarang(PDO $pdo): void
+{
+    $pdo->beginTransaction();
+    try {
+        $expiredCondition = 'b.deleted_at IS NOT NULL AND b.deleted_at <= DATE_SUB(NOW(), INTERVAL ' . (int) TRASH_RETENTION_DAYS . ' DAY)';
+
+        $pdo->exec("DELETE p FROM peminjaman p INNER JOIN barang b ON b.id = p.barang_id WHERE {$expiredCondition}");
+        $pdo->exec("DELETE FROM barang WHERE deleted_at IS NOT NULL AND deleted_at <= DATE_SUB(NOW(), INTERVAL " . (int) TRASH_RETENTION_DAYS . " DAY)");
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
 
 function getDB(): PDO {
     static $pdo = null;
@@ -25,6 +42,7 @@ function getDB(): PDO {
             if (!$column) {
                 $pdo->exec('ALTER TABLE barang ADD deleted_at DATETIME DEFAULT NULL AFTER status');
             }
+            purgeExpiredBarang($pdo);
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['error' => 'Koneksi database gagal: ' . $e->getMessage()]));

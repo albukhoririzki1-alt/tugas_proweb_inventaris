@@ -8,7 +8,7 @@
 	<div class="page-header">
 		<div>
 			<div class="page-title">Recycle Bin</div>
-			<div class="page-subtitle">Pulihkan barang atau hapus permanen</div>
+			<div class="page-subtitle">Pulihkan barang atau hapus permanen. Barang akan dihapus otomatis setelah 30 hari.</div>
 		</div>
 	</div>
 

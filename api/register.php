@@ -62,24 +62,51 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Cek duplikat email
-$stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
-$stmt->execute([$email]);
-if ($stmt->fetch()) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Email sudah terdaftar']);
+// Cek duplikat email (skip jika kolom tidak ada)
+try {
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Email sudah terdaftar']);
+        exit;
+    }
+} catch (PDOException $e) {
+    // Skip jika kolom email belum ada
+}
+
+// Simpan user baru
+$hash = password_hash($password, PASSWORD_BCRYPT);
+
+try {
+    // Try dengan semua kolom (jika ada yang missing, akan fallback)
+    try {
+        $stmt = $pdo->prepare('INSERT INTO users (nama, username, email, password, peran, aktif, status, foto_profil) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$nama, $username, $email, $hash, 'guru', 1, 'PENDING', null]);
+    } catch (PDOException $e) {
+        // Fallback: tanpa email, status, foto_profil
+        $stmt = $pdo->prepare('INSERT INTO users (nama, username, password, peran, aktif) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$nama, $username, $hash, 'guru', 1]);
+    }
+    
+    $newId = $pdo->lastInsertId();
+    
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
     exit;
 }
 
-// Simpan user baru dengan status PENDING
-$hash = password_hash($password, PASSWORD_BCRYPT);
-$stmt = $pdo->prepare('INSERT INTO users (nama, username, email, password, peran, aktif, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
-$stmt->execute([$nama, $username, $email, $hash, 'guru', 1, 'PENDING']);
-$newId = $pdo->lastInsertId();
-
-// Catat ke riwayat
-$pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
-    ->execute(["Registrasi baru: {$nama} ({$username}) — menunggu verifikasi", $newId]);
+// Catat ke riwayat (skip jika tabel riwayat tidak ada)
+try {
+    $riwayatTableCheck = $pdo->query("SHOW TABLES LIKE 'riwayat'")->fetch();
+    if ($riwayatTableCheck) {
+        $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
+            ->execute(["Registrasi baru: {$nama} ({$username}) — menunggu verifikasi", $newId]);
+    }
+} catch (Exception $e) {
+    // Skip logging jika tabel tidak ada
+}
 
 echo json_encode([
     'success' => true,

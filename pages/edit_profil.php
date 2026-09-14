@@ -11,153 +11,228 @@ $currentUser = getCurrentUser();
     <!-- Header Halaman -->
     <div class="page-header">
         <div>
-            <div class="page-title">Edit Profil</div>
+            <div class="page-title">✨ Edit Profil</div>
             <div class="page-subtitle">Kelola informasi akun Anda</div>
         </div>
     </div>
 
     <!-- Container Profil -->
-    <div style="max-width: 800px; margin: 0 auto;">
+    <div style="max-width: 900px; margin: 0 auto;">
         
         <!-- Alert untuk pesan sukses/error -->
-        <div id="alert-profil" style="display: none; margin-bottom: 1.5rem; padding: 1rem; border-radius: 8px; font-size: 0.9rem;">
-            <span id="alert-profil-text"></span>
+        <div id="alert-profil" style="display: none; margin-bottom: 1.5rem; padding: 1rem 1.25rem; border-radius: 12px; font-size: 0.9rem; backdrop-filter: blur(10px); animation: slideDown 0.3s ease;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span id="alert-icon" style="font-size: 1.25rem;"></span>
+                <span id="alert-profil-text"></span>
+            </div>
         </div>
 
-        <!-- Card Foto Profil -->
-        <div class="card" style="margin-bottom: 1.5rem; text-align: center; padding: 2rem;">
-            <div style="margin-bottom: 1rem;">
-                <div class="foto-profil-preview" style="width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; overflow: hidden; border: 3px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: center; position: relative;">
-                    <img id="preview-foto-profil" src="" alt="Foto Profil" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                    <div id="preview-initials" style="font-size: 3rem; font-weight: 700; color: var(--text-muted);">
-                        <?= strtoupper(substr($currentUser['nama'], 0, 2)) ?>
-                    </div>
-                </div>
-            </div>
-            <div style="margin-bottom: 0.5rem;">
-                <label for="input-foto-profil" class="btn btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
-                    📷 Pilih Foto
-                </label>
-                <input type="file" id="input-foto-profil" accept="image/jpeg,image/jpg,image/png" style="display: none;">
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">
-                Format: JPG, PNG | Maksimal: 2MB
-            </div>
-            <button id="btn-hapus-foto" class="btn btn-sm" style="margin-top: 0.5rem; display: none; background: rgba(248,113,113,0.1); color: var(--danger);" onclick="hapusFotoProfil()">
-                🗑️ Hapus Foto
-            </button>
-        </div>
-
-        <!-- Card Form Edit Data -->
-        <div class="card">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 600;">Informasi Akun</h3>
+        <!-- Layout Grid: 2 kolom -->
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; align-items: start;">
             
-            <form id="form-edit-profil" onsubmit="return false;">
+            <!-- Kolom Kiri: Card Foto Profil -->
+            <div class="card" style="text-align: center; padding: 2rem 1.5rem; position: sticky; top: 1rem;">
+                <div style="margin-bottom: 1.25rem;">
+                    <div class="foto-profil-preview" style="width: 180px; height: 180px; margin: 0 auto; border-radius: 50%; overflow: hidden; border: 4px solid var(--accent); background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%); display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 8px 24px rgba(79, 138, 255, 0.15); transition: all 0.3s ease;">
+                        <img id="preview-foto-profil" src="" alt="Foto Profil" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                        <div id="preview-initials" style="font-size: 3.5rem; font-weight: 800; color: var(--accent); font-family: 'Syne', sans-serif;">
+                            <?= strtoupper(substr($currentUser['nama'], 0, 2)) ?>
+                        </div>
+                        <!-- Overlay hover effect -->
+                        <div class="photo-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; border-radius: 50%;">
+                            <span style="color: white; font-size: 2rem;">📷</span>
+                        </div>
+                    </div>
+                </div>
                 
-                <!-- Nama -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
-                        Nama Lengkap
+                <div style="margin-bottom: 0.75rem;">
+                    <label for="input-foto-profil" class="btn btn-primary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; padding: 0.65rem 1.25rem; border-radius: 8px;">
+                        📷 Pilih Foto
                     </label>
-                    <input 
-                        type="text" 
-                        id="input-nama" 
-                        name="nama" 
-                        class="form-control" 
-                        value="<?= htmlspecialchars($currentUser['nama']) ?>"
-                        required
-                        style="width: 100%; padding: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem;">
+                    <input type="file" id="input-foto-profil" accept="image/jpeg,image/jpg,image/png" style="display: none;">
                 </div>
-
-                <!-- Username -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
-                        Username
-                    </label>
-                    <input 
-                        type="text" 
-                        id="input-username" 
-                        name="username" 
-                        class="form-control" 
-                        value="<?= htmlspecialchars($currentUser['username']) ?>"
-                        required
-                        style="width: 100%; padding: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                        Username harus unik dan akan digunakan untuk login
+                
+                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.5;">
+                    <div style="margin-bottom: 0.25rem;">📎 JPG, PNG</div>
+                    <div>📊 Maks. 2MB</div>
+                </div>
+                
+                <button id="btn-hapus-foto" class="btn" style="margin-top: 1rem; display: none; width: 100%; background: rgba(248,113,113,0.1); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); font-size: 0.85rem; padding: 0.5rem;" onclick="hapusFotoProfil()">
+                    🗑️ Hapus Foto
+                </button>
+                
+                <!-- Info User -->
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">Role</div>
+                    <div style="display: inline-block; padding: 0.35rem 0.75rem; background: <?= $currentUser['peran'] === 'admin' ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.15)' ?>; color: <?= $currentUser['peran'] === 'admin' ? '#f87171' : '#34d399' ?>; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">
+                        <?= $currentUser['peran'] === 'admin' ? '👑 Admin' : '📚 Guru' ?>
                     </div>
                 </div>
+            </div>
 
-                <!-- Divider -->
-                <div style="height: 1px; background: var(--border); margin: 2rem 0;"></div>
-
-                <h4 style="margin-bottom: 1rem; font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">
-                    Ubah Password (Opsional)
-                </h4>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    Kosongkan jika tidak ingin mengubah password
+            <!-- Kolom Kanan: Card Form Edit Data -->
+            <div class="card" style="padding: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
+                    <span style="font-size: 1.5rem;">👤</span>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text); font-family: 'Syne', sans-serif;">Informasi Akun</h3>
                 </div>
+                
+                <form id="form-edit-profil" onsubmit="return false;">
+                    
+                    <!-- Grid 2 kolom untuk Nama dan Username -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                        
+                        <!-- Nama -->
+                        <div class="form-group">
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text); font-size: 0.9rem;">
+                                <span>📝</span> Nama Lengkap
+                            </label>
+                            <input 
+                                type="text" 
+                                id="input-nama" 
+                                name="nama" 
+                                class="form-control" 
+                                value="<?= htmlspecialchars($currentUser['nama']) ?>"
+                                required
+                                style="width: 100%; padding: 0.85rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: all 0.2s;"
+                                onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,138,255,0.1)'"
+                                onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                        </div>
 
-                <!-- Password Lama -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
-                        Password Lama
-                    </label>
-                    <input 
-                        type="password" 
-                        id="input-password-lama" 
-                        name="password_lama" 
-                        class="form-control" 
-                        placeholder="Masukkan password lama"
-                        style="width: 100%; padding: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem;">
-                </div>
-
-                <!-- Password Baru -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
-                        Password Baru
-                    </label>
-                    <input 
-                        type="password" 
-                        id="input-password-baru" 
-                        name="password_baru" 
-                        class="form-control" 
-                        placeholder="Masukkan password baru"
-                        style="width: 100%; padding: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                        Minimal 6 karakter
+                        <!-- Username -->
+                        <div class="form-group">
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text); font-size: 0.9rem;">
+                                <span>🔑</span> Username
+                            </label>
+                            <input 
+                                type="text" 
+                                id="input-username" 
+                                name="username" 
+                                class="form-control" 
+                                value="<?= htmlspecialchars($currentUser['username']) ?>"
+                                required
+                                style="width: 100%; padding: 0.85rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: all 0.2s;"
+                                onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,138,255,0.1)'"
+                                onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                        </div>
+                    
                     </div>
-                </div>
+                    
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: -0.75rem; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(79,138,255,0.05); border-radius: 6px; border-left: 3px solid var(--accent);">
+                        💡 Username harus unik dan akan digunakan untuk login
+                    </div>
 
-                <!-- Konfirmasi Password Baru -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
-                        Konfirmasi Password Baru
-                    </label>
-                    <input 
-                        type="password" 
-                        id="input-password-konfirmasi" 
-                        name="password_konfirmasi" 
-                        class="form-control" 
-                        placeholder="Ulangi password baru"
-                        style="width: 100%; padding: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem;">
-                </div>
+                    <!-- Divider Keamanan -->
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin: 2rem 0 1.5rem 0;">
+                        <div style="flex: 1; height: 1px; background: var(--border);"></div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--accent);">
+                            <span>🔐</span> Keamanan
+                        </div>
+                        <div style="flex: 1; height: 1px; background: var(--border);"></div>
+                    </div>
 
-                <!-- Tombol Submit -->
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" class="btn btn-primary" onclick="simpanProfil()" style="flex: 1;">
-                        💾 Simpan Perubahan
-                    </button>
-                    <button type="button" class="btn" style="flex: 0.3; background: var(--surface2); color: var(--text-muted);" onclick="batalEditProfil()">
-                        Batal
-                    </button>
-                </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem; padding: 0.75rem; background: rgba(251,146,60,0.05); border-radius: 6px; border-left: 3px solid var(--warn);">
+                        ⚠️ Kosongkan semua field password jika tidak ingin mengubah password
+                    </div>
 
-            </form>
+                    <!-- Password Fields -->
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text); font-size: 0.9rem;">
+                            <span>🔒</span> Password Lama
+                        </label>
+                        <input 
+                            type="password" 
+                            id="input-password-lama" 
+                            name="password_lama" 
+                            class="form-control" 
+                            placeholder="Masukkan password lama"
+                            style="width: 100%; padding: 0.85rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,138,255,0.1)'"
+                            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                        
+                        <!-- Password Baru -->
+                        <div class="form-group">
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text); font-size: 0.9rem;">
+                                <span>🔑</span> Password Baru
+                            </label>
+                            <input 
+                                type="password" 
+                                id="input-password-baru" 
+                                name="password_baru" 
+                                class="form-control" 
+                                placeholder="Minimal 6 karakter"
+                                style="width: 100%; padding: 0.85rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: all 0.2s;"
+                                onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,138,255,0.1)'"
+                                onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                        </div>
+
+                        <!-- Konfirmasi Password -->
+                        <div class="form-group">
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--text); font-size: 0.9rem;">
+                                <span>✅</span> Konfirmasi Password
+                            </label>
+                            <input 
+                                type="password" 
+                                id="input-password-konfirmasi" 
+                                name="password_konfirmasi" 
+                                class="form-control" 
+                                placeholder="Ulangi password baru"
+                                style="width: 100%; padding: 0.85rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: all 0.2s;"
+                                onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,138,255,0.1)'"
+                                onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                        </div>
+                    
+                    </div>
+
+                    <!-- Tombol Submit -->
+                    <div style="display: flex; gap: 1rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        <button type="button" class="btn btn-primary" onclick="simpanProfil()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 1.5rem; font-weight: 600; font-size: 0.95rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(79,138,255,0.25); transition: all 0.2s;">
+                            <span>💾</span> Simpan Perubahan
+                        </button>
+                        <button type="button" class="btn" style="background: var(--surface2); color: var(--text-muted); padding: 0.9rem 1.5rem; font-weight: 500; border-radius: 10px; transition: all 0.2s;" onclick="batalEditProfil()" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--surface2)'">
+                            Batal
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        
         </div>
 
     </div>
 
 </div>
+
+<style>
+.foto-profil-preview:hover .photo-overlay {
+    opacity: 1;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive untuk mobile */
+@media (max-width: 768px) {
+    #page-edit-profil > div > div {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #page-edit-profil .card:first-child {
+        position: static !important;
+    }
+}
+</style>
 
 <script>
 // Preview Foto Profil saat dipilih
@@ -328,18 +403,21 @@ function batalEditProfil() {
 function showAlertProfil(type, message) {
     const alertDiv = document.getElementById('alert-profil');
     const alertText = document.getElementById('alert-profil-text');
+    const alertIcon = document.getElementById('alert-icon');
     
     alertText.textContent = message;
     alertDiv.style.display = 'block';
     
     if (type === 'success') {
-        alertDiv.style.background = 'rgba(52, 211, 153, 0.15)';
+        alertDiv.style.background = 'linear-gradient(135deg, rgba(52, 211, 153, 0.15) 0%, rgba(52, 211, 153, 0.05) 100%)';
         alertDiv.style.border = '1px solid rgba(52, 211, 153, 0.3)';
         alertDiv.style.color = '#34d399';
+        alertIcon.textContent = '✅';
     } else {
-        alertDiv.style.background = 'rgba(248, 113, 113, 0.15)';
+        alertDiv.style.background = 'linear-gradient(135deg, rgba(248, 113, 113, 0.15) 0%, rgba(248, 113, 113, 0.05) 100%)';
         alertDiv.style.border = '1px solid rgba(248, 113, 113, 0.3)';
         alertDiv.style.color = '#f87171';
+        alertIcon.textContent = '❌';
     }
     
     // Auto hide setelah 5 detik
@@ -347,8 +425,8 @@ function showAlertProfil(type, message) {
         alertDiv.style.display = 'none';
     }, 5000);
     
-    // Scroll ke atas
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll ke atas dengan smooth
+    document.getElementById('page-edit-profil').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Load foto profil saat halaman dimuat

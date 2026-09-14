@@ -381,15 +381,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="error-box">❌ <?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
 
-                <?php
-                $isPending  = strpos($error, 'menunggu verifikasi') !== false;
-                $isRejected = strpos($error, 'ditolak') !== false;
-                $isWarning  = $isPending || $isRejected;
-                ?>
-                <div class="<?= $isWarning ? 'warning-box' : 'error-box' ?>">
-                    <?= $isPending ? '⏳' : ($isRejected ? '🚫' : '❌') ?> <?= htmlspecialchars($error) ?>
-                </div>
-
             <?php endif; ?>
 
             <!-- Form -->

@@ -18,7 +18,7 @@ $pdo    = getDB();
 $user   = getCurrentUser();
 
 if ($method === 'GET') {
-    $rows = $pdo->query("SELECT id, nama, username, peran, aktif, created_at FROM users ORDER BY id")->fetchAll();
+    $rows = $pdo->query("SELECT id, nama, username, peran, aktif, created_at FROM users WHERE aktif = 1 ORDER BY id")->fetchAll();
     echo json_encode($rows);
     exit;
 }
@@ -98,11 +98,28 @@ if ($method === 'DELETE') {
     $uname->execute([$id]);
     $row = $uname->fetch();
 
-    $pdo->prepare("UPDATE users SET aktif=0 WHERE id=?")->execute([$id]);
-    $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
-        ->execute(["User \"{$row['username']}\" dinonaktifkan", $user['id']]);
+    try {
+        $pdo->beginTransaction();
 
-    echo json_encode(['success' => true]);
+        // 1. Putuskan relasi dari tabel lain agar tidak error (set NULL)
+        $pdo->prepare("UPDATE barang SET user_id=NULL WHERE user_id=?")->execute([$id]);
+        $pdo->prepare("UPDATE peminjaman SET user_id=NULL WHERE user_id=?")->execute([$id]);
+        $pdo->prepare("UPDATE riwayat SET user_id=NULL WHERE user_id=?")->execute([$id]);
+
+        // 2. Hapus data secara permanen
+        $pdo->prepare("DELETE FROM users WHERE id=?")->execute([$id]);
+
+        // 3. Catat ke riwayat
+        $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
+            ->execute(["User \"{$row['username']}\" dihapus permanen dari database", $user['id']]);
+
+        $pdo->commit();
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        http_response_code(500);
+        echo json_encode(['error' => 'Gagal menghapus akun secara permanen: ' . $e->getMessage()]);
+    }
     exit;
 }
 

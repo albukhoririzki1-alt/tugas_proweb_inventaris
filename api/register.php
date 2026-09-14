@@ -84,9 +84,9 @@ try {
         $stmt = $pdo->prepare('INSERT INTO users (nama, username, email, password, peran, aktif, status, foto_profil) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([$nama, $username, $email, $hash, 'guru', 1, 'PENDING', null]);
     } catch (PDOException $e) {
-        // Fallback: tanpa email, status, foto_profil
-        $stmt = $pdo->prepare('INSERT INTO users (nama, username, password, peran, aktif) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$nama, $username, $hash, 'guru', 1]);
+        // Fallback: tanpa email, foto_profil
+        $stmt = $pdo->prepare('INSERT INTO users (nama, username, password, peran, aktif, status) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$nama, $username, $hash, 'guru', 1, 'PENDING']);
     }
     
     $newId = $pdo->lastInsertId();

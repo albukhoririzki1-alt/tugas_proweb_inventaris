@@ -667,10 +667,10 @@ async function simpanUser() {
 }
 
 async function hapusUser(id, username) {
-  if (!confirm(`Nonaktifkan user "${username}"?`)) return;
+  if (!confirm(`Hapus permanen user "${username}" dari database? Data ini tidak bisa dikembalikan.`)) return;
   try {
     await api('api/users.php?id=' + id, 'DELETE');
-    toast('User dinonaktifkan', 'info');
+    toast('User dihapus permanen', 'info');
     loadUsers();
   } catch (e) { toast(e.message, 'error'); }
 }

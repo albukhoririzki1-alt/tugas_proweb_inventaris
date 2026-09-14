@@ -373,14 +373,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Error / Warning message -->
             <?php if ($error): ?>
 
-                <?php if (strpos($error, 'menunggu verifikasi') !== false): ?>
-                    <div class="warning-box">⏳ <?= htmlspecialchars($error) ?></div>
-                <?php elseif (strpos($error, 'ditolak') !== false): ?>
-                    <div class="error-box">🚫 <?= htmlspecialchars($error) ?></div>
-                <?php else: ?>
-                    <div class="error-box">❌ <?= htmlspecialchars($error) ?></div>
-                <?php endif; ?>
-
                 <?php
                 $isPending  = strpos($error, 'menunggu verifikasi') !== false;
                 $isRejected = strpos($error, 'ditolak') !== false;

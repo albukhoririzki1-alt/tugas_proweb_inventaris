@@ -456,7 +456,21 @@ if (!empty($_SESSION['user_id'])) {
                     body: JSON.stringify({ nama, username, email, password, confirm_password: confirm })
                 });
 
-                const data = await res.json();
+                // Debug: log response text sebelum parse JSON
+                const responseText = await res.text();
+                console.log('Response:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('Response was:', responseText);
+                    showError('Server mengembalikan response yang tidak valid. Check console untuk detail.');
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Daftar Akun →';
+                    return;
+                }
 
                 if (!res.ok) {
                     showError(data.error || 'Terjadi kesalahan saat mendaftar');
@@ -476,7 +490,8 @@ if (!empty($_SESSION['user_id'])) {
                 }, 4000);
 
             } catch (err) {
-                showError('Gagal terhubung ke server. Coba lagi nanti.');
+                console.error('Error:', err);
+                showError('Gagal terhubung ke server. Coba lagi nanti. Detail: ' + err.message);
                 btnSubmit.disabled = false;
                 btnSubmit.textContent = 'Daftar Akun →';
             }

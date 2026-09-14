@@ -60,7 +60,7 @@ $badge = $badgeColors[$peran];
                 <span class="icon">👥</span> Kelola User
             </button>
             <button class="nav-item" onclick="showPage('verifikasi-users', this)">
-                <span class="icon">🗑️</span> Verifikasi user
+                <span class="icon">✅</span> Verifikasi user
             </button>
             <button class="nav-item" onclick="showPage('recycle', this)">
                 <span class="icon">🗑️</span> Recycle Bin

@@ -59,13 +59,17 @@ $badge = $badgeColors[$peran];
             <button class="nav-item" onclick="showPage('kelola-users', this)">
                 <span class="icon">👥</span> Kelola User
             </button>
+            <button class="nav-item" onclick="showPage('verifikasi-users', this)">
+                <span class="icon">✅</span> Verifikasi user
+            </button>
             <button class="nav-item" onclick="showPage('recycle', this)">
                 <span class="icon">🗑️</span> Recycle Bin
             </button>
         <?php endif; ?>
+
     </nav>
 
-    <!-- Info Pengguna -->
+    <!-- Info Pengguna  -->
     <div class="sidebar-user">
         <div class="user-avatar"><?= htmlspecialchars($initials) ?></div>
         <div style="flex:1;min-width:0">

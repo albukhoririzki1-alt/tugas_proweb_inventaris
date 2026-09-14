@@ -69,7 +69,7 @@ $badge = $badgeColors[$peran];
 
     </nav>
 
-    <!-- Info Pengguna -->
+    <!-- Info Pengguna  -->
     <div class="sidebar-user">
         <div class="user-avatar"><?= htmlspecialchars($initials) ?></div>
         <div style="flex:1;min-width:0">

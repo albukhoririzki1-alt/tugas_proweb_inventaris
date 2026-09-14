@@ -55,8 +55,17 @@ try {
         exit;
     }
     
+    // Cek apakah kolom foto_profil ada
+    $hasFotoProfilColumn = false;
+    try {
+        $columnCheck = $pdo->query("SHOW COLUMNS FROM users LIKE 'foto_profil'")->fetch();
+        $hasFotoProfilColumn = !empty($columnCheck);
+    } catch (Exception $e) {
+        // Kolom belum ada, skip
+    }
+    
     // Handle foto profil upload
-    $fotoProfilPath = $user['foto_profil']; // Keep existing foto by default
+    $fotoProfilPath = $hasFotoProfilColumn && isset($user['foto_profil']) ? $user['foto_profil'] : null;
     
     if (isset($_FILES['foto_profil']) && $_FILES['foto_profil']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['foto_profil'];
@@ -90,8 +99,8 @@ try {
         // Upload file
         if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
             // Hapus foto lama jika ada
-            if ($user['foto_profil'] && file_exists(__DIR__ . '/../' . $user['foto_profil'])) {
-                unlink(__DIR__ . '/../' . $user['foto_profil']);
+            if ($hasFotoProfilColumn && !empty($user['foto_profil']) && file_exists(__DIR__ . '/../' . $user['foto_profil'])) {
+                @unlink(__DIR__ . '/../' . $user['foto_profil']);
             }
             
             $fotoProfilPath = 'uploads/profil/' . $filename;
@@ -102,8 +111,14 @@ try {
     }
     
     // Prepare update query
-    $updateFields = ['nama = ?', 'username = ?', 'foto_profil = ?'];
-    $updateParams = [$nama, $username, $fotoProfilPath];
+    $updateFields = ['nama = ?', 'username = ?'];
+    $updateParams = [$nama, $username];
+    
+    // Tambahkan foto_profil jika kolom ada
+    if ($hasFotoProfilColumn) {
+        $updateFields[] = 'foto_profil = ?';
+        $updateParams[] = $fotoProfilPath;
+    }
     
     // Handle password update jika diisi
     if (!empty($passwordLama) && !empty($passwordBaru)) {
@@ -136,9 +151,16 @@ try {
     $_SESSION['nama'] = $nama;
     $_SESSION['username'] = $username;
     
-    // Log aktivitas
-    $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
-        ->execute(["Update Profil: {$nama}", $userId]);
+    // Log aktivitas (hanya jika tabel riwayat ada)
+    try {
+        $tableExists = $pdo->query("SHOW TABLES LIKE 'riwayat'")->fetch();
+        if ($tableExists) {
+            $pdo->prepare('INSERT INTO riwayat (aksi, user_id) VALUES (?, ?)')
+                ->execute(["Update Profil: {$nama}", $userId]);
+        }
+    } catch (Exception $e) {
+        // Skip logging jika tabel tidak ada
+    }
     
     // Return success dengan data terbaru
     echo json_encode([

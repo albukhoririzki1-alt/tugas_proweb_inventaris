@@ -19,8 +19,21 @@ $userId = $currentUser['id'];
 try {
     $pdo = getDB();
     
+    // Cek apakah kolom foto_profil ada
+    $hasFotoProfilColumn = false;
+    try {
+        $columnCheck = $pdo->query("SHOW COLUMNS FROM users LIKE 'foto_profil'")->fetch();
+        $hasFotoProfilColumn = !empty($columnCheck);
+    } catch (Exception $e) {
+        // Kolom belum ada
+    }
+    
     // Ambil data user dari database
-    $stmt = $pdo->prepare('SELECT id, nama, username, peran, foto_profil, created_at FROM users WHERE id = ?');
+    if ($hasFotoProfilColumn) {
+        $stmt = $pdo->prepare('SELECT id, nama, username, peran, foto_profil, created_at FROM users WHERE id = ?');
+    } else {
+        $stmt = $pdo->prepare('SELECT id, nama, username, peran, created_at FROM users WHERE id = ?');
+    }
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     
@@ -37,7 +50,7 @@ try {
             'nama' => $user['nama'],
             'username' => $user['username'],
             'peran' => $user['peran'],
-            'foto_profil' => $user['foto_profil'] ? $user['foto_profil'] : null,
+            'foto_profil' => ($hasFotoProfilColumn && isset($user['foto_profil'])) ? $user['foto_profil'] : null,
             'created_at' => $user['created_at']
         ]
     ]);

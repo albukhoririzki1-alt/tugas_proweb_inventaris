@@ -61,6 +61,7 @@ $badge = $badgeColors[$peran];
             </button>
             <button class="nav-item" onclick="showPage('verifikasi-users', this)">
                 <span class="icon">✅</span> Verifikasi user
+                <span class="nav-badge" id="badge-pending" style="display:none;background:#fb923c"></span>
             </button>
             <button class="nav-item" onclick="showPage('recycle', this)">
                 <span class="icon">🗑️</span> Recycle Bin

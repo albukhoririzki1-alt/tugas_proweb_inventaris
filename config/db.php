@@ -42,6 +42,16 @@ function getDB(): PDO {
             if (!$column) {
                 $pdo->exec('ALTER TABLE barang ADD deleted_at DATETIME DEFAULT NULL AFTER status');
             }
+            // Auto-migrate: tambah kolom email di tabel users
+            $colEmail = $pdo->query("SHOW COLUMNS FROM users LIKE 'email'")->fetch();
+            if (!$colEmail) {
+                $pdo->exec("ALTER TABLE users ADD email VARCHAR(200) DEFAULT NULL AFTER username");
+            }
+            // Auto-migrate: tambah kolom status_akun di tabel users
+            $colStatus = $pdo->query("SHOW COLUMNS FROM users LIKE 'status_akun'")->fetch();
+            if (!$colStatus) {
+                $pdo->exec("ALTER TABLE users ADD status_akun ENUM('APPROVED','PENDING','REJECTED') NOT NULL DEFAULT 'APPROVED' AFTER peran");
+            }
             purgeExpiredBarang($pdo);
         } catch (PDOException $e) {
             http_response_code(500);

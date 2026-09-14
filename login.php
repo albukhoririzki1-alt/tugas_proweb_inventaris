@@ -1,5 +1,4 @@
 <?php
-
 /**
  * login.php — Halaman Login Sistem Inventaris
  */
@@ -27,17 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            // Cek status akun
-            $status = $user['status'] ?? 'ACTIVE';
+            // Cek status akun (Menggabungkan kolom status atau status_akun)
+            $status = $user['status'] ?? $user['status_akun'] ?? 'ACTIVE';
 
             if ($status === 'PENDING') {
-                $error = 'Akun Anda masih menunggu verifikasi Admin.';
+                $error = 'Akun Anda masih menunggu verifikasi Admin. Silakan tunggu persetujuan.';
             } elseif ($status === 'REJECTED') {
-                $error = 'Pendaftaran Anda telah ditolak oleh Admin.';
-            } elseif (!$user['aktif']) {
+                $error = 'Pendaftaran Anda telah ditolak oleh Admin. Hubungi Admin untuk informasi lebih lanjut.';
+            } elseif (isset($user['aktif']) && !$user['aktif']) {
                 $error = 'Akun Anda telah dinonaktifkan. Hubungi Admin.';
             } else {
-                // Status ACTIVE dan aktif = 1 → login berhasil
+                // Status ACTIVE — Login sukses
                 session_regenerate_id(true);
                 $_SESSION['user_id']  = $user['id'];
                 $_SESSION['nama']     = $user['nama'];
@@ -279,6 +278,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        .warning-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(251, 146, 60, 0.1);
+            border: 1px solid rgba(251, 146, 60, 0.25);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #fb923c;
+            margin-bottom: 18px;
+            animation: shake 0.4s ease;
+        }
+
+        .link-register {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .link-register a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.15s;
+        }
+
+        .link-register a:hover {
+            color: var(--accent2);
+        }
+
         .btn-login {
             width: 100%;
             padding: 14px;
@@ -338,8 +370,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Card -->
         <div class="login-card">
 
-            <!-- Error message -->
+            <!-- Error / Warning message -->
             <?php if ($error): ?>
+
                 <?php if (strpos($error, 'menunggu verifikasi') !== false): ?>
                     <div class="warning-box">⏳ <?= htmlspecialchars($error) ?></div>
                 <?php elseif (strpos($error, 'ditolak') !== false): ?>
@@ -347,6 +380,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php else: ?>
                     <div class="error-box">❌ <?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
+
+                <?php
+                $isPending  = strpos($error, 'menunggu verifikasi') !== false;
+                $isRejected = strpos($error, 'ditolak') !== false;
+                $isWarning  = $isPending || $isRejected;
+                ?>
+                <div class="<?= $isWarning ? 'warning-box' : 'error-box' ?>">
+                    <?= $isPending ? '⏳' : ($isRejected ? '🚫' : '❌') ?> <?= htmlspecialchars($error) ?>
+                </div>
+
             <?php endif; ?>
 
             <!-- Form -->
@@ -378,6 +421,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Link ke register -->
             <div class="register-link">
                 Belum punya akun? <a href="register.php">Daftar</a>
+
+            <div class="link-register">
+                Belum punya akun? <a href="register.php">Daftar di sini</a>
+
             </div>
         </div>
     </div>

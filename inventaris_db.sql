@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
   password     VARCHAR(255) NOT NULL,
   peran        ENUM('admin','guru') NOT NULL DEFAULT 'guru',
   aktif        TINYINT(1)   NOT NULL DEFAULT 1,
+  foto_profil  VARCHAR(255) DEFAULT NULL,
   created_at   DATETIME     DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

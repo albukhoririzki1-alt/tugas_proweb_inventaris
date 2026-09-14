@@ -22,6 +22,7 @@ $peran = $_SESSION['peran'];
             <?php require_once 'pages/barang.php'; ?>
             <?php require_once 'pages/peminjaman.php'; ?>
             <?php require_once 'pages/kondisi.php'; ?>
+            <?php require_once 'pages/edit_profil.php'; ?>
 
 
             <?php if ($peran === 'admin' || $peran === 'guru'): ?>
